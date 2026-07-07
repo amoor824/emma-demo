@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Emma · KI-Telefonassistenz – Autoteile per Anruf bestellen</title>
+<meta name="description" content="Sprechen Sie mit Emma und bestellen Sie Autoteile einfach per Sprache. Interaktive Demo." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --night:#08080a; --coal:#0f0f12; --graphite:#17171c; --slate:#22232a;
+    --line:#2c2d35; --steel:#8b909b; --chrome:#e9ebef; --silver:#c6cad2;
+    --accent:#4aa6ff; --accent-deep:#1f7ae0; --good:#3ddc84; --warn:#f5b942;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
+    background:radial-gradient(1200px 700px at 50% -10%, #14151b 0%, var(--night) 55%);
+    color:var(--chrome); min-height:100vh; -webkit-font-smoothing:antialiased;
+    padding:24px; overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* Header */
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{width:40px;height:40px;border-radius:11px;
+    background:linear-gradient(145deg,var(--accent),var(--accent-deep));
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 0 40px -10px rgba(74,166,255,.6);}
+  .brand b{font-size:19px;font-weight:700;letter-spacing:-.01em;}
+  .brand .sub{font-size:12px;color:var(--steel);margin-top:1px;}
+  .badge-demo{font-size:11.5px;color:var(--steel);letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:20px;padding:6px 13px;}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:1fr 400px;gap:22px;align-items:start;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:linear-gradient(180deg,var(--graphite),var(--coal));
+    border:1px solid var(--line);border-radius:20px;padding:26px;}
+
+  /* Call panel */
+  .eyebrow{text-transform:uppercase;letter-spacing:.3em;font-size:11px;font-weight:600;color:var(--accent);}
+  h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:10px 0 6px;line-height:1.15;}
+  .lead{color:var(--silver);font-size:14.5px;line-height:1.6;max-width:44ch;}
+
+  .orbwrap{display:flex;flex-direction:column;align-items:center;margin:26px 0 10px;}
+  .orb{position:relative;width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #3a3d47, #14151a 70%);
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);transition:.4s;}
+  .orb i{font-size:52px;font-style:normal;}
+  .orb::before,.orb::after{content:"";position:absolute;inset:0;border-radius:50%;
+    border:2px solid var(--accent);opacity:0;}
+  .orb.speaking{border-color:var(--accent);box-shadow:0 0 70px -12px rgba(74,166,255,.75);}
+  .orb.speaking::before{animation:ring 1.8s ease-out infinite;}
+  .orb.speaking::after{animation:ring 1.8s ease-out .9s infinite;}
+  .orb.listening{border-color:var(--good);box-shadow:0 0 70px -12px rgba(61,220,132,.6);}
+  @keyframes ring{0%{opacity:.7;transform:scale(1);}100%{opacity:0;transform:scale(1.5);}}
+  .status{margin-top:16px;font-size:13.5px;color:var(--steel);height:20px;letter-spacing:.02em;}
+  .status b{color:var(--chrome);}
+
+  .btns{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:15px;
+    padding:14px 26px;border-radius:13px;display:inline-flex;align-items:center;gap:9px;transition:.2s;}
+  .btn.call{background:linear-gradient(145deg,var(--accent),var(--accent-deep));color:#fff;
+    box-shadow:0 8px 30px -8px rgba(74,166,255,.6);}
+  .btn.call:hover{transform:translateY(-2px);}
+  .btn.end{background:#2a1416;color:#ff8a8a;border:1px solid #4a2226;}
+  .btn.ghost{background:var(--slate);color:var(--silver);border:1px solid var(--line);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  /* Transcript */
+  .transcript{margin-top:22px;border-top:1px solid var(--line);padding-top:18px;
+    max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+  .msg{display:flex;gap:10px;font-size:14px;line-height:1.5;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .msg .who{flex:0 0 42px;font-size:11px;font-weight:700;letter-spacing:.05em;padding-top:2px;}
+  .msg.bot .who{color:var(--accent);}
+  .msg.user .who{color:var(--good);}
+  .msg .txt{color:var(--silver);}
+  .msg.bot .txt{color:var(--chrome);}
+  .empty{color:var(--steel);font-size:13.5px;font-style:italic;}
+
+  /* Manual input */
+  .manual{display:flex;gap:9px;margin-top:16px;}
+  .manual input{flex:1;background:var(--night);border:1px solid var(--line);border-radius:11px;
+    padding:12px 14px;color:var(--chrome);font-family:inherit;font-size:14px;}
+  .manual input:focus{outline:none;border-color:var(--accent);}
+  .manual button{background:var(--slate);border:1px solid var(--line);color:var(--silver);
+    border-radius:11px;padding:0 16px;cursor:pointer;font-family:inherit;font-weight:600;}
+
+  /* Order ticket */
+  .ticket .thead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .ticket .tno{font-size:12px;color:var(--steel);font-variant-numeric:tabular-nums;}
+  .ticket h2{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-bottom:2px;}
+  .ticket .tsub{font-size:12.5px;color:var(--steel);margin-bottom:18px;}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);}
+  .row .k{font-size:12px;color:var(--steel);text-transform:uppercase;letter-spacing:.08em;flex:0 0 auto;padding-top:2px;}
+  .row .v{font-size:14.5px;font-weight:600;text-align:right;color:var(--chrome);transition:.3s;}
+  .row .v.pending{color:var(--steel);font-weight:400;font-style:italic;}
+  .row .v.set{animation:pop .35s ease;}
+  @keyframes pop{0%{color:var(--accent);}100%{color:var(--chrome);}}
+  .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);}
+  .total .k{font-size:13px;color:var(--silver);font-weight:600;}
+  .total .v{font-size:26px;font-weight:800;letter-spacing:-.02em;}
+  .total .v span{font-size:14px;color:var(--steel);font-weight:500;}
+  .stamp{margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(61,220,132,.09);
+    border:1px solid rgba(61,220,132,.28);display:none;align-items:center;gap:11px;}
+  .stamp.show{display:flex;animation:fade .4s ease;}
+  .stamp i{font-size:22px;font-style:normal;}
+  .stamp .st{font-size:13.5px;color:var(--good);font-weight:600;}
+  .stamp .sd{font-size:12px;color:var(--steel);margin-top:1px;}
+
+  .hint{margin-top:20px;font-size:12px;color:var(--steel);line-height:1.6;}
+  .hint code{background:var(--slate);padding:1px 7px;border-radius:6px;color:var(--silver);font-size:11.5px;}
+  .warnbar{display:none;margin-top:14px;padding:11px 14px;border-radius:11px;background:rgba(245,185,66,.1);
+    border:1px solid rgba(245,185,66,.3);color:var(--warn);font-size:12.5px;line-height:1.5;}
+  .warnbar.show{display:block;}
+  .foot{text-align:center;margin-top:34px;font-size:12px;color:var(--steel);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <span class="mark">🔧</span>
+      <div><b id="shopName">Musterwerkstatt</b><div class="sub">Ersatzteil-Hotline · Emma KI-Assistenz</div></div>
+    </div>
+    <div class="badge-demo">Interaktive Demo</div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Call -->
+    <div class="card">
+      <span class="eyebrow">Live-Demo · Sprachbestellung</span>
+      <h1>Bestellen Sie Autoteile,<br>indem Sie einfach sprechen.</h1>
+      <p class="lead">Tippen Sie auf <b>Anruf starten</b> und sagen Sie Emma, welches Teil Sie brauchen. Sie fragt nach Fahrzeug und Menge und legt die Bestellung an.</p>
+
+      <div class="orbwrap">
+        <div class="orb" id="orb"><i id="orbIcon">🎧</i></div>
+        <div class="status" id="status">Bereit für Ihren Anruf.</div>
+      </div>
+
+      <div class="btns">
+        <button class="btn call" id="callBtn">📞 Anruf starten</button>
+        <button class="btn end" id="endBtn" disabled>Auflegen</button>
+        <button class="btn ghost" id="resetBtn">Neu</button>
+      </div>
+
+      <div class="warnbar" id="warnbar"></div>
+
+      <div class="transcript" id="transcript">
+        <div class="empty" id="emptyHint">Das Gespräch erscheint hier, sobald Sie den Anruf starten.</div>
+      </div>
+
+      <div class="manual">
+        <input id="manualInput" placeholder="Kein Mikro? Hier tippen und Enter…" autocomplete="off" />
+        <button id="manualSend">Senden</button>
+      </div>
+
+      <div class="hint">
+        Probieren Sie z.&nbsp;B.: <code>Ich brauche Bremsbeläge</code> · <code>für einen VW Golf 7</code> · <code>vier Stück</code> · <code>ja, passt</code><br>
+        Tipp: In <b>Chrome</b> funktioniert die Spracherkennung am besten. Mikrofon-Zugriff erlauben.
+      </div>
+    </div>
+
+    <!-- RIGHT: Order ticket -->
+    <div class="card ticket">
+      <div class="thead">
+        <span class="eyebrow">Bestellung</span>
+        <span class="tno" id="orderNo">#—</span>
+      </div>
+      <h2>Ersatzteil-Auftrag</h2>
+      <div class="tsub">Wird während des Gesprächs automatisch ausgefüllt</div>
+
+      <div class="row"><span class="k">Teil</span><span class="v pending" id="fTeil">wird erfragt…</span></div>
+      <div class="row"><span class="k">Fahrzeug</span><span class="v pending" id="fFahrzeug">wird erfragt…</span></div>
+      <div class="row"><span class="k">Menge</span><span class="v pending" id="fMenge">wird erfragt…</span></div>
+      <div class="row"><span class="k">Einzelpreis</span><span class="v pending" id="fPreis">—</span></div>
+      <div class="row"><span class="k">Verfügbar</span><span class="v pending" id="fLager">—</span></div>
+
+      <div class="total"><span class="k">Gesamt</span><span class="v" id="fTotal">—</span></div>
+
+      <div class="stamp" id="stamp">
+        <i>✅</i>
+        <div><div class="st">Bestellung aufgenommen</div><div class="sd" id="stampSub">Emma hat den Auftrag angelegt.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Interaktive Demo · Spracherkennung läuft lokal im Browser · Keine echte Bestellung</div>
+</div>
+
+<script>
+/* =========================================================
+   Emma – Sprach-Demo für Autoteil-Bestellung
+   Alles in dieser Datei. Kein Backend, kein API-Key.
+
+   >> Werkstattname hier anpassen (erscheint oben + in der Begrüßung):
+*/
+const SHOP = "Musterwerkstatt";
+const ASSISTANT = "Emma";
+/* ========================================================= */
+
+/* ---------- Ersatzteil-Katalog (Preise/Teile frei anpassbar) ---------- */
+const CATALOG = [
+  {key:"bremsbeläge", names:["bremsbelag","bremsbeläge","bremsklötze","beläge"], label:"Bremsbeläge (Satz)", price:49, stock:true},
+  {key:"bremsscheiben", names:["bremsscheibe","bremsscheiben","scheiben"], label:"Bremsscheiben (Paar)", price:89, stock:true},
+  {key:"ölfilter", names:["ölfilter","oelfilter","öl filter"], label:"Ölfilter", price:12, stock:true},
+  {key:"luftfilter", names:["luftfilter","luft filter"], label:"Luftfilter", price:18, stock:true},
+  {key:"innenraumfilter", names:["innenraumfilter","pollenfilter","innenraum filter"], label:"Innenraumfilter", price:22, stock:true},
+  {key:"zündkerzen", names:["zündkerze","zündkerzen","kerzen","zuendkerzen"], label:"Zündkerzen (Stück)", price:9, stock:true},
+  {key:"scheibenwischer", names:["scheibenwischer","wischer","wischerblätter","wischblätter"], label:"Scheibenwischer (Paar)", price:24, stock:true},
+  {key:"batterie", names:["batterie","autobatterie","starterbatterie"], label:"Autobatterie 72Ah", price:119, stock:true},
+  {key:"keilriemen", names:["keilriemen","keilrippenriemen","riemen","zahnriemen","zahnriemensatz"], label:"Keilrippenriemen", price:34, stock:true},
+  {key:"stoßdämpfer", names:["stoßdämpfer","stossdämpfer","dämpfer","stossdaempfer"], label:"Stoßdämpfer", price:79, stock:true},
+  {key:"kupplung", names:["kupplung","kupplungssatz"], label:"Kupplungssatz", price:199, stock:false},
+  {key:"auspuff", names:["auspuff","endschalldämpfer","auspuffanlage"], label:"Endschalldämpfer", price:129, stock:true},
+  {key:"wasserpumpe", names:["wasserpumpe","kühlmittelpumpe"], label:"Wasserpumpe", price:65, stock:true},
+  {key:"lichtmaschine", names:["lichtmaschine","generator"], label:"Lichtmaschine", price:189, stock:true},
+  {key:"anlasser", names:["anlasser","starter","startermotor"], label:"Anlasser", price:149, stock:false},
+  {key:"wischwasser", names:["wischwasser","scheibenwaschmittel","frostschutz"], label:"Scheiben-Frostschutz 5L", price:11, stock:true},
+];
+
+/* ---------- Zahlwörter ---------- */
+const NUMWORDS={"ein":1,"eine":1,"einen":1,"eins":1,"zwei":2,"zwo":2,"drei":3,"vier":4,"fünf":5,"fuenf":5,"sechs":6,"sieben":7,"acht":8,"neun":9,"zehn":10,"elf":11,"zwölf":12};
+
+/* ---------- State ---------- */
+let stage="idle"; // idle, part, vehicle, qty, confirm, done
+let order={teil:null, fahrzeug:null, menge:null};
+let recog=null, recogActive=false, wantListen=false;
+
+const $=id=>document.getElementById(id);
+const orb=$("orb"), orbIcon=$("orbIcon"), statusEl=$("status"), transcript=$("transcript");
+
+/* Werkstattname in die Kopfzeile schreiben */
+$("shopName").textContent=SHOP;
+
+/* ---------- Speech synth ---------- */
+let deVoice=null;
+function pickVoice(){
+  const vs=speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith("de"));
+  deVoice=
+    vs.find(v=>/google/i.test(v.name)) ||
+    vs.find(v=>/(natural|neural|online|premium)/i.test(v.name) && /(katja|petra|marlene|female|frau)/i.test(v.name)) ||
+    vs.find(v=>/(natural|neural|online)/i.test(v.name)) ||
+    vs.find(v=>/(katja|petra|marlene|hedda|female|frau)/i.test(v.name)) ||
+    vs[0] || null;
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+
+function speak(text, cb){
+  addMsg("bot", text);
+  if(!("speechSynthesis" in window)){ setUI("idle"); cb&&cb(); return; }
+  stopListen();
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="de-DE"; u.rate=0.96; u.pitch=1.0; u.volume=1; if(deVoice)u.voice=deVoice;
+  setUI("speaking");
+  u.onend=()=>{ setUI("idle"); cb&&cb(); };
+  u.onerror=()=>{ setUI("idle"); cb&&cb(); };
+  speechSynthesis.speak(u);
+}
+
+/* ---------- UI helpers ---------- */
+function setUI(mode){
+  orb.classList.remove("speaking","listening");
+  if(mode==="speaking"){orb.classList.add("speaking");orbIcon.textContent="💬";statusEl.innerHTML="<b>"+ASSISTANT+" spricht…</b>";}
+  else if(mode==="listening"){orb.classList.add("listening");orbIcon.textContent="🎙️";statusEl.innerHTML="<b>Ich höre zu…</b> sprechen Sie jetzt";}
+  else if(mode==="idle"){orbIcon.textContent="🎧";statusEl.textContent="Verbunden.";}
+  else if(mode==="off"){orbIcon.textContent="🎧";statusEl.textContent="Bereit für Ihren Anruf.";}
+}
+function addMsg(who,text){
+  const eh=$("emptyHint"); if(eh)eh.remove();
+  const d=document.createElement("div"); d.className="msg "+who;
+  d.innerHTML='<span class="who"></span><span class="txt"></span>';
+  d.querySelector(".who").textContent=(who==="bot"?ASSISTANT:"Sie");
+  d.querySelector(".txt").textContent=text;
+  transcript.appendChild(d); transcript.scrollTop=transcript.scrollHeight;
+}
+function setField(id,val){const e=$(id);e.textContent=val;e.classList.remove("pending");e.classList.remove("set");void e.offsetWidth;e.classList.add("set");}
+
+/* ---------- Speech recognition ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function startListen(){
+  if(!SR){return;}
+  wantListen=true;
+  if(recogActive)return;
+  recog=new SR(); recog.lang="de-DE"; recog.interimResults=false; recog.maxAlternatives=1; recog.continuous=false;
+  recog.onstart=()=>{recogActive=true;setUI("listening");};
+  recog.onresult=e=>{
+    const said=e.results[0][0].transcript.trim();
+    if(said){ addMsg("user",said); handle(said); }
+  };
+  recog.onerror=e=>{
+    recogActive=false;
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+      showWarn("Mikrofon-Zugriff wurde blockiert. Erlauben Sie das Mikrofon oben in der Adressleiste – oder tippen Sie Ihre Antwort unten ein.");
+      wantListen=false; setUI("idle");
+    }
+  };
+  recog.onend=()=>{recogActive=false; if(wantListen&&stage!=="idle"&&stage!=="done"){ try{recog.start();}catch(_){}} };
+  try{recog.start();}catch(_){}
+}
+function stopListen(){ wantListen=false; if(recog&&recogActive){try{recog.stop();}catch(_){}} }
+function listenAfterSpeak(){ if(SR) startListen(); }
+
+/* ---------- NLU ---------- */
+function findPart(t){
+  t=t.toLowerCase();
+  for(const p of CATALOG){ for(const n of p.names){ if(t.includes(n)) return p; } }
+  return null;
+}
+function findQty(t){
+  t=t.toLowerCase();
+  const digit=t.match(/\b(\d{1,3})\b/); if(digit) return parseInt(digit[1],10);
+  for(const w in NUMWORDS){ if(new RegExp("\\b"+w+"\\b").test(t)) return NUMWORDS[w]; }
+  return null;
+}
+function isYes(t){t=t.toLowerCase();return /\b(ja|genau|passt|korrekt|richtig|stimmt|klar|jap|jo|perfekt|okay|ok)\b/.test(t);}
+function isNo(t){t=t.toLowerCase();return /\b(nein|falsch|ne|nö|quatsch|nicht richtig|ändern)\b/.test(t);}
+
+/* ---------- Dialog engine ---------- */
+const R=a=>a[Math.floor(Math.random()*a.length)];
+const OK=()=>R(["Alles klar","Super","Sehr gern","Prima","Sehr gut"]);
+
+function handle(said){
+  if(stage==="part"){
+    const p=findPart(said);
+    if(p){ order.teil=p; setField("fTeil",p.label); askVehicle(); }
+    else { speak(R(["Hm, das habe ich gerade nicht gefunden.","Da bin ich mir nicht sicher, welches Teil Sie meinen."])+" Wir haben zum Beispiel Bremsbeläge, Ölfilter, Scheibenwischer oder eine neue Autobatterie da. Was brauchen Sie denn?", listenAfterSpeak); }
+  }
+  else if(stage==="vehicle"){
+    order.fahrzeug=tidyVehicle(said); setField("fFahrzeug",order.fahrzeug); askQty();
+  }
+  else if(stage==="qty"){
+    const q=findQty(said);
+    if(q){ order.menge=q; setField("fMenge",q+" Stück"); confirm(); }
+    else { speak("Und wie viele dürfen es sein? Sagen Sie mir einfach eine Zahl.", listenAfterSpeak); }
+  }
+  else if(stage==="confirm"){
+    if(isYes(said)){ finish(); }
+    else if(isNo(said)){ resetOrder(false); speak("Kein Thema, dann machen wir das nochmal. Welches Teil brauchen Sie?", ()=>{stage="part";listenAfterSpeak();}); }
+    else { speak("Passt das so für Sie? Sagen Sie einfach ja, oder nein.", listenAfterSpeak); }
+  }
+}
+
+function tidyVehicle(s){
+  s=s.replace(/^(für|einen|einem|ein|eine|meinen|mein|meine|das ist ein|es ist ein)\s+/i,"").trim();
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+function askVehicle(){
+  stage="vehicle";
+  if(order.teil.stock===false){ setField("fLager","Bestellware (2–3 Tage)"); }
+  speak(OK()+", "+order.teil.label+", das notiere ich. Für welches Fahrzeug ist das denn? Sagen Sie mir am besten Marke und Modell.", listenAfterSpeak);
+}
+function askQty(){
+  stage="qty";
+  speak(R(["Perfekt","Super","Alles klar"])+", "+order.fahrzeug+". Und wie viele "+order.teil.label+" dürfen es sein?", listenAfterSpeak);
+}
+function confirm(){
+  stage="confirm";
+  const p=order.teil, total=p.price*order.menge;
+  setField("fPreis",p.price.toFixed(2).replace(".",",")+" €");
+  setField("fLager", p.stock? "Auf Lager ✓" : "Bestellware (2–3 Tage)");
+  $("fTotal").innerHTML=total.toFixed(2).replace(".",",")+' <span>brutto</span>';
+  const verf = p.stock? "Die haben wir da, direkt bei uns im Lager." : "Die müsste ich kurz für Sie bestellen, das dauert so zwei bis drei Tage.";
+  speak("Ich fasse mal eben zusammen: "+order.menge+" mal "+p.label+", für Ihren "+order.fahrzeug+". Das macht zusammen "+total.toFixed(2).replace(".",",")+" Euro. "+verf+" Soll ich das so für Sie aufnehmen?", listenAfterSpeak);
+}
+function finish(){
+  stage="done"; wantListen=false; stopListen();
+  $("stamp").classList.add("show");
+  $("stampSub").textContent="Auftrag "+$("orderNo").textContent+" · Sie erhalten eine SMS zur Abholung.";
+  const p=order.teil;
+  const pickup = p.stock? "Sie können es schon ab morgen früh bei uns abholen." : "Ich melde mich bei Ihnen, sobald das Teil da ist.";
+  speak("Wunderbar, das ist notiert. "+pickup+" Vielen Dank für Ihren Anruf, und einen schönen Tag noch, hier bei der "+SHOP+"!", ()=>{ endCall(true); });
+  $("callBtn").disabled=false; $("callBtn").textContent="📞 Neuer Anruf"; $("endBtn").disabled=true;
+}
+
+/* ---------- Call control ---------- */
+function genOrderNo(){ let s="A-"; for(let i=0;i<5;i++) s+=Math.floor(Math.random()*10); return s; }
+function startCall(){
+  resetOrder(true);
+  $("orderNo").textContent="#"+genOrderNo();
+  $("callBtn").disabled=true; $("callBtn").textContent="📞 Anruf läuft"; $("endBtn").disabled=false;
+  stage="part";
+  if(!("speechSynthesis" in window)&&!SR){
+    showWarn("Ihr Browser unterstützt keine Sprachein-/ausgabe. Nutzen Sie Chrome – oder tippen Sie unten mit.");
+  }
+  speak(SHOP+", mein Name ist "+ASSISTANT+", schön dass Sie anrufen! Sagen Sie mir einfach, welches Autoteil ich für Sie heraussuchen darf.", listenAfterSpeak);
+}
+function endCall(auto){
+  stopListen(); if("speechSynthesis" in window && !auto) speechSynthesis.cancel();
+  setUI("off");
+  if(!auto){ $("callBtn").disabled=false; $("callBtn").textContent="📞 Anruf starten"; $("endBtn").disabled=true; if(stage!=="done")stage="idle"; }
+}
+function resetOrder(clearTicket){
+  order={teil:null,fahrzeug:null,menge:null};
+  if(clearTicket){
+    ["fTeil","fFahrzeug","fMenge"].forEach(id=>{$(id).textContent="wird erfragt…";$(id).className="v pending";});
+    ["fPreis","fLager"].forEach(id=>{$(id).textContent="—";$(id).className="v pending";});
+    $("fTotal").textContent="—"; $("stamp").classList.remove("show");
+  }
+}
+function showWarn(t){$("warnbar").textContent=t;$("warnbar").classList.add("show");}
+
+/* ---------- Bind ---------- */
+$("callBtn").onclick=()=>{ if("speechSynthesis"in window)speechSynthesis.resume(); startCall(); };
+$("endBtn").onclick=()=>endCall(false);
+$("resetBtn").onclick=()=>{ endCall(false); resetOrder(true); $("orderNo").textContent="#—"; transcript.innerHTML='<div class="empty" id="emptyHint">Das Gespräch erscheint hier, sobald Sie den Anruf starten.</div>'; stage="idle"; setUI("off"); $("warnbar").classList.remove("show"); $("callBtn").textContent="📞 Anruf starten"; };
+$("manualSend").onclick=sendManual;
+$("manualInput").addEventListener("keydown",e=>{if(e.key==="Enter")sendManual();});
+function sendManual(){
+  const v=$("manualInput").value.trim(); if(!v)return; $("manualInput").value="";
+  if(stage==="idle"){ startCall(); return; }
+  stopListen(); addMsg("user",v); handle(v);
+}
+
+/* Hinweis, falls keine Spracherkennung vorhanden */
+window.addEventListener("load",()=>{
+  if(!SR){ showWarn("Hinweis: Ihr Browser unterstützt keine Spracherkennung. In Chrome funktioniert es am besten – ansonsten tippen Sie Ihre Antworten unten ins Feld."); }
+});
+</script>
+</body>
+</html>
